@@ -148,7 +148,6 @@ export default function Quotations() {
 
     try {
       const pdf = new jsPDF("p", "mm", "a4");
-      const pdfWidth = pdf.internal.pageSize.getWidth();
 
       const capture = async (el: HTMLElement, pdf: jsPDF) => {
         const canvas = await html2canvas(el, {
@@ -166,7 +165,6 @@ export default function Quotations() {
         const margin = 15;
 
         const usableWidth = pageWidth - margin * 2;
-        const usableHeight = pageHeight - margin * 2;
 
         const imgHeight = (canvas.height * usableWidth) / canvas.width;
 
