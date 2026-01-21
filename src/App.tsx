@@ -1,11 +1,11 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Navbar from "/Users/sangeethaluke/invoicer/src/components/Navbar.tsx";
-import Sidebar from "/Users/sangeethaluke/invoicer/src/components/Sidebar.tsx";
-import Dashboard from "/Users/sangeethaluke/invoicer/src/pages/Dashboard.tsx";
-import Home from "/Users/sangeethaluke/invoicer/src/pages/Home.tsx";
-import Documents from "/Users/sangeethaluke/invoicer/src/pages/Documents.tsx";
-import Quotations from "/Users/sangeethaluke/invoicer/src/pages/Quotations.tsx";
-import QuoteHome from "/Users/sangeethaluke/invoicer/src/pages/QuoteHome.tsx";
+import Navbar from "./components/Navbar";
+import Sidebar from "./components/Sidebar";
+import Dashboard from "./pages/Dashboard";
+import Home from "./pages/Home";
+import Documents from "./pages/Documents";
+import Quotations from "./pages/Quotations";
+import QuoteHome from "./pages/QuoteHome";
 import QuoteView from "./pages/QuoteView";
 
 import "./App.css";
