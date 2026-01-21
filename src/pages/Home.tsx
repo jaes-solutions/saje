@@ -12,7 +12,7 @@ function Home() {
 
   return (
     <div className="font-sans bg-black min-h-screen flex flex-col text-white selection:bg-blue-500/30 relative overflow-hidden">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.06),_transparent_60%)]"></div>
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.06),transparent_60%)]"></div>
       {/* Top Nav */}
       <header
         data-aos="fade-down"
@@ -32,7 +32,7 @@ function Home() {
       <section className="text-center px-4 py-24">
         <h1
           data-aos="fade-up"
-          className="text-7xl font-extrabold mb-8 leading-[1.05] bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent"
+          className="text-7xl font-extrabold mb-8 leading-[1.05] bg-linear-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent"
         >
           Manage Billing <br /> With Confidence
         </h1>
@@ -91,7 +91,7 @@ function Home() {
       <section className="px-6 py-24 text-center">
         <h2
           data-aos="fade-up"
-          className="text-4xl font-bold mb-12 bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent"
+          className="text-4xl font-bold mb-12 bg-linear-to-r from-white to-gray-400 bg-clip-text text-transparent"
         >
           How It Works
         </h2>
@@ -156,7 +156,7 @@ function Home() {
       <section className="px-6 py-28 text-center">
         <h2
           data-aos="fade-up"
-          className="text-5xl font-extrabold mb-6 bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent"
+          className="text-5xl font-extrabold mb-6 bg-linear-to-r from-white to-gray-400 bg-clip-text text-transparent"
         >
           Ready to simplify your billing?
         </h2>

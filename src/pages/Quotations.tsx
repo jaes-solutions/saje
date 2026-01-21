@@ -161,7 +161,6 @@ export default function Quotations() {
         const imgData = canvas.toDataURL("image/png");
 
         const pageWidth = 210; // A4 mm
-        const pageHeight = 297; // A4 mm
         const margin = 15;
 
         const usableWidth = pageWidth - margin * 2;

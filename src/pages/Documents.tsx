@@ -27,7 +27,7 @@ function Documents() {
 
   return (
     <div className="flex-1 p-10 overflow-auto bg-black text-white relative ml-64">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.05),_transparent_60%)]"></div>
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.05),transparent_60%)]"></div>
       <h1 className="relative text-4xl font-extrabold mb-12 tracking-tight">
         Documents
       </h1>
