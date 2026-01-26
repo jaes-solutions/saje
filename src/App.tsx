@@ -7,6 +7,8 @@ import Documents from "./pages/Documents";
 import Quotations from "./pages/Quotations";
 import QuoteHome from "./pages/QuoteHome";
 import QuoteView from "./pages/QuoteView";
+import InvoiceHome from "./pages/InvoiceHome";
+import Invoices from "./pages/Invoices";
 
 import "./App.css";
 
@@ -64,6 +66,21 @@ function App() {
           }
         />
         <Route
+          path="/invoice"
+          element={
+            <div
+              className="app-layout"
+              style={{ display: "flex", height: "100vh" }}
+            >
+              <Sidebar />
+              <div style={{ flex: 1 }}>
+                <Navbar />
+                <InvoiceHome />
+              </div>
+            </div>
+          }
+        />
+        <Route
           path="/quotation"
           element={
             <div
@@ -89,6 +106,21 @@ function App() {
               <div style={{ flex: 1 }}>
                 <Navbar />
                 <Quotations />
+              </div>
+            </div>
+          }
+        />
+        <Route
+          path="/invoices/:invoiceNumber"
+          element={
+            <div
+              className="app-layout"
+              style={{ display: "flex", height: "100vh" }}
+            >
+              <Sidebar />
+              <div style={{ flex: 1 }}>
+                <Navbar />
+                <Invoices />
               </div>
             </div>
           }

@@ -2,13 +2,14 @@ import React, { useRef } from "react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 
 export default function Quotations() {
   const { quoteNumber: routeQuoteNumber } = useParams<{
     quoteNumber: string;
   }>();
+  const navigate = useNavigate();
   const pdfRef = useRef<HTMLDivElement | null>(null);
   const page1Ref = useRef<HTMLDivElement | null>(null);
   const page2Ref = useRef<HTMLDivElement | null>(null);
@@ -102,21 +103,21 @@ export default function Quotations() {
 
     const payload = {
       quote_number: activeQuoteNumber,
-      items: items, // send directly, Supabase jsonb-safe
+      items: JSON.stringify(items),
       vat_percent: vatPercent,
       currency: currency,
       shipping_cost: shippingCost,
       sales_consultant: salesConsultant || null,
-      valid_until: validUntil || null, // MUST be string (YYYY-MM-DD) or null
+      valid_until: validUntil || null,
       invoice_address: invoiceAddress || null,
       delivery_address: deliveryAddress || null,
       page2_notes: page2Notes || null,
-      updated_at: new Date().toISOString(),
     };
 
-    const { error } = await supabase.from("quotes").upsert(payload, {
-      onConflict: "quote_number",
-    });
+    const { error } = await supabase
+      .from("quotes")
+      .upsert(payload, { onConflict: "quote_number" })
+      .select();
 
     if (error) {
       console.error("Supabase save error:", error);
@@ -259,7 +260,18 @@ export default function Quotations() {
         >
           Save Quote
         </button>
-
+        <button
+          onClick={() => navigate("/invoice")}
+          style={{
+            padding: "8px 16px",
+            background: "#9333ea",
+            color: "#fff",
+            border: "none",
+            cursor: "pointer",
+          }}
+        >
+          Invoice
+        </button>
         <button
           onClick={() => setPage(1)}
           style={{
@@ -272,7 +284,6 @@ export default function Quotations() {
         >
           Page 1
         </button>
-
         <button
           onClick={() => setPage(2)}
           style={{
