@@ -1,82 +1,68 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 
-type Invoice = {
-  invoiceNumber: number;
+type DeliveryNote = {
+  deliveryNoteNumber: number;
   createdAt: string;
 };
 
-export default function InvoiceHome() {
+export default function DeliveryHome() {
   const navigate = useNavigate();
-  const [recentInvoices, setRecentInvoices] = useState<Invoice[]>([]);
+  const [recentNotes, setRecentNotes] = useState<DeliveryNote[]>([]);
 
-  const formatInvoiceNumber = (num: number) => {
+  const formatDeliveryNoteNumber = (num: number) => {
     const year = new Date().getFullYear().toString().slice(-2);
-    return `${year}-INV-${String(num).padStart(6, "0")}`;
+    return `${year}-DN-${String(num).padStart(6, "0")}`;
   };
 
-  // Load recent invoices
+  // Load recent delivery notes
   useEffect(() => {
-    const loadInvoices = async () => {
+    const loadNotes = async () => {
       const { data, error } = await supabase
-        .from("invoices")
-        .select("invoice_number, created_at")
-        .order("invoice_number", { ascending: false })
+        .from("delivery_notes")
+        .select("delivery_note_number, created_at")
+        .order("delivery_note_number", { ascending: false })
         .limit(10);
 
-      if (!error && data) {
-        setRecentInvoices(
-          data.map((i: any) => ({
-            invoiceNumber: i.invoice_number,
-            createdAt: new Date(i.created_at).toLocaleString("en-GB"),
+      if (error) {
+        console.error("DeliveryHome Supabase error:", error);
+        setRecentNotes([]);
+        return;
+      }
+
+      if (data) {
+        setRecentNotes(
+          data.map((n: any) => ({
+            deliveryNoteNumber: n.delivery_note_number,
+            createdAt: n.created_at
+              ? new Date(n.created_at).toLocaleString("en-GB")
+              : "—",
           })),
         );
       }
     };
 
-    loadInvoices();
+    loadNotes();
   }, []);
 
-  const createNewInvoice = async () => {
-    const stored = Number(localStorage.getItem("invoiceCounter"));
-    const base = Number.isFinite(stored) && stored >= 9000 ? stored : 9000;
+  const createNewDeliveryNote = async () => {
+    const stored = Number(localStorage.getItem("deliveryNoteCounter"));
+    const base = Number.isFinite(stored) && stored >= 3000 ? stored : 3000;
     const newNo = base + 1;
-    localStorage.setItem("invoiceCounter", String(newNo));
+    localStorage.setItem("deliveryNoteCounter", String(newNo));
 
-    const { error } = await supabase.from("invoices").insert({
-      invoice_number: newNo,
+    const { error } = await supabase.from("delivery_notes").insert({
+      delivery_note_number: newNo,
       items: [],
-      vat_percent: 0,
-      shipping: 0,
-      other: 0,
-      currency: "INR",
-      vendor: {},
-      ship_to: {},
-      comments: "",
     });
 
     if (error) {
-      alert("Failed to create invoice");
+      alert("Failed to create delivery note");
       return;
     }
 
-    // Create empty placeholder file in Storage → invoices folder
-    const fileName = `Invoice-${newNo}.pdf`;
-    const emptyFile = new Blob([""], { type: "application/pdf" });
-
-    const { error: storageError } = await supabase.storage
-      .from("invoices")
-      .upload(fileName, emptyFile, {
-        upsert: false,
-        contentType: "application/pdf",
-      });
-
-    if (storageError) {
-      console.warn("Invoice created but storage file failed:", storageError);
-    }
-
-    navigate(`/invoices/${newNo}`);
+    navigate("/delivery/new");
   };
 
   return (
@@ -90,12 +76,12 @@ export default function InvoiceHome() {
       }}
     >
       <h1 style={{ fontSize: 32, fontWeight: 800, marginBottom: 32 }}>
-        Invoices
+        Delivery Notes
       </h1>
 
-      {/* Create Invoice Tile */}
+      {/* Create Delivery Note Tile */}
       <div
-        onClick={createNewInvoice}
+        onClick={createNewDeliveryNote}
         style={{
           width: 260,
           height: 150,
@@ -111,16 +97,18 @@ export default function InvoiceHome() {
         }}
       >
         <div style={{ fontSize: 42, lineHeight: 1, color: "#fff" }}>＋</div>
-        <div style={{ marginTop: 8, fontWeight: 600 }}>Create New Invoice</div>
+        <div style={{ marginTop: 8, fontWeight: 600 }}>
+          Create New Delivery Note
+        </div>
       </div>
 
-      {/* Recent Invoices */}
+      {/* Recent Delivery Notes */}
       <h2 style={{ fontSize: 22, fontWeight: 600, marginBottom: 16 }}>
-        Recent Invoices
+        Recent Delivery Notes
       </h2>
 
-      {recentInvoices.length === 0 ? (
-        <p>No invoices created yet.</p>
+      {recentNotes.length === 0 ? (
+        <p>No delivery notes created yet.</p>
       ) : (
         <table
           style={{
@@ -131,34 +119,35 @@ export default function InvoiceHome() {
         >
           <thead>
             <tr style={{ background: "rgba(255,255,255,0.08)" }}>
-              <th style={th}>Invoice Number</th>
+              <th style={th}>Delivery Note Number</th>
               <th style={th}>Created At</th>
               <th style={th}>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {recentInvoices.map((i) => (
-              <tr key={i.invoiceNumber}>
-                <td style={td}>{formatInvoiceNumber(i.invoiceNumber)}</td>
-                <td style={td}>{i.createdAt}</td>
+            {recentNotes.map((n) => (
+              <tr key={n.deliveryNoteNumber}>
+                <td style={td}>
+                  {formatDeliveryNoteNumber(n.deliveryNoteNumber)}
+                </td>
+                <td style={td}>{n.createdAt}</td>
                 <td style={td}>
                   <button
                     onClick={async (e) => {
                       e.stopPropagation();
 
-                      const fileName = `Invoice-${i.invoiceNumber}.pdf`;
+                      const fileName = `DeliveryNote-${n.deliveryNoteNumber}.pdf`;
 
                       const { data, error } = await supabase.storage
-                        .from("invoices")
-                        .download(fileName);
+                        .from("delivery-notes-pdf")
+                        .createSignedUrl(fileName, 60 * 5);
 
-                      if (error || !data) {
-                        alert("PDF not found in storage.");
+                      if (error || !data?.signedUrl) {
+                        alert("PDF not found. Please generate the PDF first.");
                         return;
                       }
 
-                      const url = URL.createObjectURL(data);
-                      window.open(url, "_blank");
+                      window.open(data.signedUrl, "_blank");
                     }}
                     style={{
                       padding: "6px 12px",
@@ -174,15 +163,15 @@ export default function InvoiceHome() {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      navigate(`/invoices/${i.invoiceNumber}`);
+                      navigate(`/delivery/${n.deliveryNoteNumber}`);
                     }}
                     style={{
                       padding: "6px 12px",
-                      marginLeft: 8,
                       border: "1px solid rgba(255,255,255,0.3)",
-                      background: "rgba(255,255,255,0.08)",
+                      background: "#000",
                       color: "#fff",
                       cursor: "pointer",
+                      marginLeft: 8,
                     }}
                   >
                     Edit

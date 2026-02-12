@@ -9,7 +9,10 @@ import QuoteHome from "./pages/QuoteHome";
 import QuoteView from "./pages/QuoteView";
 import InvoiceHome from "./pages/InvoiceHome";
 import Invoices from "./pages/Invoices";
-
+import DeliveryHome from "./pages/DeliveryHome";
+import DeliveryNotes from "./pages/DeliveryNotes";
+import ProformaInvoice from "./pages/ProformaInvoice";
+import PurchaseOrder from "./pages/PurchaseOrder";
 import "./App.css";
 
 function App() {
@@ -61,6 +64,52 @@ function App() {
               <div style={{ flex: 1 }}>
                 <Navbar />
                 <QuoteHome />
+              </div>
+            </div>
+          }
+        />
+        <Route
+          path="/delivery"
+          element={
+            <div
+              className="app-layout"
+              style={{ display: "flex", height: "100vh" }}
+            >
+              <Sidebar />
+              <div style={{ flex: 1 }}>
+                <Navbar />
+                <DeliveryHome />
+              </div>
+            </div>
+          }
+        />
+        <Route
+          path="/delivery/new"
+          element={
+            <div
+              className="app-layout"
+              style={{ display: "flex", height: "100vh" }}
+            >
+              <Sidebar />
+              <div style={{ flex: 1 }}>
+                <Navbar />
+                <DeliveryNotes />
+              </div>
+            </div>
+          }
+        />
+
+        <Route
+          path="/delivery/:deliveryNoteNumber"
+          element={
+            <div
+              className="app-layout"
+              style={{ display: "flex", height: "100vh" }}
+            >
+              <Sidebar />
+              <div style={{ flex: 1 }}>
+                <Navbar />
+                <DeliveryNotes />
               </div>
             </div>
           }
@@ -121,6 +170,67 @@ function App() {
               <div style={{ flex: 1 }}>
                 <Navbar />
                 <Invoices />
+              </div>
+            </div>
+          }
+        />
+        <Route
+          path="/proforma"
+          element={
+            <div
+              className="app-layout"
+              style={{ display: "flex", height: "100vh" }}
+            >
+              <Sidebar />
+              <div style={{ flex: 1 }}>
+                <Navbar />
+                <ProformaInvoice />
+              </div>
+            </div>
+          }
+        />
+        <Route
+          path="/proforma/:proformaNumber"
+          element={
+            <div
+              className="app-layout"
+              style={{ display: "flex", height: "100vh" }}
+            >
+              <Sidebar />
+              <div style={{ flex: 1 }}>
+                <Navbar />
+                <ProformaInvoice />
+              </div>
+            </div>
+          }
+        />
+        <Route
+          path="/purchase-order"
+          element={
+            <div
+              className="app-layout"
+              style={{ display: "flex", height: "100vh" }}
+            >
+              <Sidebar />
+              <div style={{ flex: 1 }}>
+                <Navbar />
+                <PurchaseOrder />
+              </div>
+            </div>
+          }
+        />
+
+        <Route
+          path="/purchase-order/:poNumber"
+          element={
+            <div
+              className="app-layout"
+              style={{ display: "flex", height: "100vh" }}
+            >
+              <Sidebar />
+              <div style={{ flex: 1 }}>
+                <Navbar />
+                <PurchaseOrder />
               </div>
             </div>
           }

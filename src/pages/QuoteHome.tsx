@@ -11,6 +11,11 @@ export default function QuoteHome() {
   const navigate = useNavigate();
   const [recentQuotes, setRecentQuotes] = useState<Quote[]>([]);
 
+  const formatQuoteNumber = (num: number) => {
+    const year = new Date().getFullYear().toString().slice(-2);
+    return `${year}-QT-${String(num).padStart(6, "0")}`;
+  };
+
   // Load recent quotes
   useEffect(() => {
     const loadQuotes = async () => {
@@ -115,7 +120,7 @@ export default function QuoteHome() {
           <tbody>
             {recentQuotes.map((q) => (
               <tr key={q.quoteNumber}>
-                <td style={td}>QT-{q.quoteNumber}</td>
+                <td style={td}>{formatQuoteNumber(q.quoteNumber)}</td>
                 <td style={td}>{q.createdAt}</td>
                 <td style={td}>
                   <button

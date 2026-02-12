@@ -54,6 +54,56 @@ export default function Invoices() {
   const [, setHistory] = useState<HistoryOption[]>([]);
 
   /* =========================
+     LOAD EXISTING INVOICE (by invoiceNumber)
+  ========================= */
+  useEffect(() => {
+    if (!invoiceNumber) return;
+
+    const loadInvoice = async () => {
+      const { data, error } = await supabase
+        .from("invoices")
+        .select("*")
+        .eq("invoice_number", Number(invoiceNumber))
+        .maybeSingle();
+
+      if (error) {
+        console.error("Failed to load invoice:", error);
+        return;
+      }
+      if (!data) return;
+
+      setCurrency(data.currency ?? "USD");
+      setPoNumber(data.po_number ?? "");
+      setPaymentTerms(data.payment_terms ?? "30 days");
+
+      setVendor({
+        name: data.vendor_name ?? "",
+        address: data.vendor_address ?? "",
+        phone: data.vendor_phone ?? "",
+      });
+
+      setShipTo({
+        name: data.ship_to_name ?? "",
+        address: data.ship_to_address ?? "",
+        phone: data.ship_to_phone ?? "",
+      });
+
+      setItems(
+        Array.isArray(data.items) && data.items.length
+          ? data.items
+          : [{ item: "", description: "", qty: 1, price: 0 }],
+      );
+
+      setComments(data.comments ?? "");
+      setVat(data.vat ?? 0);
+      setShipping(data.shipping ?? 0);
+      setOther(data.other ?? 0);
+    };
+
+    loadInvoice();
+  }, [invoiceNumber]);
+
+  /* =========================
      LOAD HISTORY (Q + I)
   ========================= */
   useEffect(() => {
@@ -62,47 +112,27 @@ export default function Invoices() {
 
       const { data: quotes } = await supabase
         .from("quotes")
-        .select(
-          "quote_number, vendor_name, vendor_address, vendor_phone, ship_to_name, ship_to_address, ship_to_phone",
-        )
+        .select("quote_number")
         .limit(20);
 
       quotes?.forEach((q: any) => {
         opts.push({
           label: `Q-${q.quote_number}`,
-          vendor: {
-            name: q.vendor_name || "",
-            address: q.vendor_address || "",
-            phone: q.vendor_phone || "",
-          },
-          shipTo: {
-            name: q.ship_to_name || "",
-            address: q.ship_to_address || "",
-            phone: q.ship_to_phone || "",
-          },
+          vendor: { name: "", address: "", phone: "" },
+          shipTo: { name: "", address: "", phone: "" },
         });
       });
 
       const { data: invoices } = await supabase
         .from("invoices")
-        .select(
-          "invoice_number, vendor_name, vendor_address, vendor_phone, ship_to_name, ship_to_address, ship_to_phone",
-        )
+        .select("invoice_number")
         .limit(20);
 
       invoices?.forEach((i: any) => {
         opts.push({
           label: `I-${i.invoice_number}`,
-          vendor: {
-            name: i.vendor_name || "",
-            address: i.vendor_address || "",
-            phone: i.vendor_phone || "",
-          },
-          shipTo: {
-            name: i.ship_to_name || "",
-            address: i.ship_to_address || "",
-            phone: i.ship_to_phone || "",
-          },
+          vendor: { name: "", address: "", phone: "" },
+          shipTo: { name: "", address: "", phone: "" },
         });
       });
 
@@ -119,6 +149,15 @@ export default function Invoices() {
     () => items.reduce((s, i) => s + Number(i.qty) * Number(i.price || 0), 0),
     [items],
   );
+
+  // =========================
+  //   DISPLAY INVOICE NUMBER
+  // =========================
+  const displayInvoiceNumber = useMemo(() => {
+    const year = new Date().getFullYear().toString().slice(-2);
+    const num = String(invoiceNumber ?? "").padStart(6, "0");
+    return `${year}-INV-${num}`;
+  }, [invoiceNumber]);
 
   /* =========================
      SAVE (UPSERT + PDF)
@@ -181,7 +220,7 @@ export default function Invoices() {
      RENDER
   ========================= */
   return (
-    <div style={{ background: "#000", padding: 24 }}>
+    <div style={{ background: "#000", padding: 32 }}>
       <style>{`
   .invoice-page {
     font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
@@ -193,8 +232,21 @@ export default function Invoices() {
     color: #1f3a8a;
   }
 
+  .btn-lb {
+    background: #2563eb;
+    color: #fff;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  .btn-lb:hover {
+    background: #1d4ed8;
+  }
+
   .editable {
-    background: #ffffff;
+    background: rgba(255, 255, 255, 0.4);
     border: 1px solid #d0d7e2;
     border-radius: 6px;
     padding: 6px 8px;
@@ -215,7 +267,15 @@ export default function Invoices() {
     z-index: 1;
   }
 `}</style>
-      <div style={{ display: "flex", justifyContent: "center", gap: 12 }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "flex-end",
+          gap: 12,
+          maxWidth: 794,
+          margin: "0 auto",
+        }}
+      >
         <button className="btn-lb">Download PDF</button>
         <button className="btn-lb" onClick={saveInvoice}>
           Save Invoice
@@ -229,20 +289,35 @@ export default function Invoices() {
           width: 794,
           margin: "24px auto",
           background: "#fff",
-          backgroundImage: "url('/assets/watermark.png')",
-          backgroundRepeat: "no-repeat",
-          backgroundPosition: "center",
-          backgroundSize: "70%",
           padding: 32,
           overflow: "hidden",
+          boxShadow: "0 10px 25px rgba(0,0,0,0.08)",
+          borderRadius: 8,
         }}
       >
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            backgroundImage: "url('/assets/watermark.png')",
+            backgroundRepeat: "no-repeat",
+            backgroundPosition: "center",
+            backgroundSize: "70%",
+            opacity: 0.18,
+            pointerEvents: "none",
+            zIndex: 0,
+          }}
+        />
         {/* HEADER */}
         <div
           style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}
         >
           <div>
-            <img src="/logo.png" alt="JAES" style={{ height: 48 }} />
+            <img
+              src="/assets/jaes-logo.png"
+              alt="JAES"
+              style={{ height: 64 }}
+            />
             <p>
               <strong>JAES Solutions LTD</strong>
             </p>
@@ -291,15 +366,15 @@ export default function Invoices() {
             </p>
             <p
               style={{
-                background: "#eaf2ff",
-                color: "#1f3a8a",
+                background: "#eef2ff",
+                color: "#1e3a8a",
                 padding: 6,
                 display: "inline-block",
                 borderRadius: 6,
                 fontWeight: 600,
               }}
             >
-              INV: I-{invoiceNumber}
+              {displayInvoiceNumber}
             </p>
           </div>
         </div>
@@ -312,7 +387,12 @@ export default function Invoices() {
         >
           <div>
             <div
-              style={{ background: "#eaf2ff", color: "#1f3a8a", padding: 6 }}
+              style={{
+                background: "#eef2ff",
+                color: "#1e3a8a",
+                fontWeight: 600,
+                padding: 6,
+              }}
             >
               VENDOR
             </div>
@@ -327,14 +407,23 @@ export default function Invoices() {
                   phone: "",
                 })
               }
-              style={{ width: "100%", minHeight: 120, background: "#ffffff" }}
+              style={{
+                width: "100%",
+                minHeight: 120,
+                background: "rgba(255,255,255,0.4)",
+              }}
               className="editable"
             />
           </div>
 
           <div>
             <div
-              style={{ background: "#eaf2ff", color: "#1f3a8a", padding: 6 }}
+              style={{
+                background: "#eef2ff",
+                color: "#1e3a8a",
+                fontWeight: 600,
+                padding: 6,
+              }}
             >
               SHIP TO
             </div>
@@ -349,7 +438,11 @@ export default function Invoices() {
                   phone: "",
                 })
               }
-              style={{ width: "100%", minHeight: 120, background: "#ffffff" }}
+              style={{
+                width: "100%",
+                minHeight: 120,
+                background: "rgba(255,255,255,0.4)",
+              }}
               className="editable"
             />
           </div>
@@ -367,7 +460,9 @@ export default function Invoices() {
             width: "100%",
           }}
         >
-          <thead style={{ background: "#eaf2ff", color: "#1f3a8a" }}>
+          <thead
+            style={{ background: "#eef2ff", color: "#1e3a8a", fontWeight: 600 }}
+          >
             <tr>
               <th style={{ width: "15%" }}>ITEM</th>
               <th style={{ width: "35%" }}>DESCRIPTION</th>
@@ -378,7 +473,7 @@ export default function Invoices() {
           </thead>
           <tbody>
             {items.map((it, idx) => (
-              <tr key={idx} style={{ background: "#ffffff" }}>
+              <tr key={idx} style={{ background: "transparent" }}>
                 <td>
                   <input
                     value={it.item}
@@ -464,14 +559,19 @@ export default function Invoices() {
         >
           <div>
             <div
-              style={{ background: "#eaf2ff", color: "#1f3a8a", padding: 6 }}
+              style={{
+                background: "#eef2ff",
+                color: "#1e3a8a",
+                fontWeight: 600,
+                padding: 6,
+              }}
             >
               Comments or Special Instructions
             </div>
             <textarea
               value={comments}
               onChange={(e) => setComments(e.target.value)}
-              style={{ width: "100%" }}
+              style={{ width: "100%", minHeight: 100 }}
               className="editable"
             />
           </div>
@@ -493,7 +593,10 @@ export default function Invoices() {
                         setVat(Math.max(0, Number(e.target.value)))
                       }
                       min={0}
-                      style={{ background: "#ffffff", width: "100%" }}
+                      style={{
+                        background: "rgba(255,255,255,0.4)",
+                        width: "100%",
+                      }}
                       className="editable"
                     />
                   </td>
@@ -508,7 +611,10 @@ export default function Invoices() {
                         setShipping(Math.max(0, Number(e.target.value)))
                       }
                       min={0}
-                      style={{ background: "#ffffff", width: "100%" }}
+                      style={{
+                        background: "rgba(255,255,255,0.4)",
+                        width: "100%",
+                      }}
                       className="editable"
                     />
                   </td>
@@ -523,12 +629,15 @@ export default function Invoices() {
                         setOther(Math.max(0, Number(e.target.value)))
                       }
                       min={0}
-                      style={{ background: "#ffffff", width: "100%" }}
+                      style={{
+                        background: "rgba(255,255,255,0.4)",
+                        width: "100%",
+                      }}
                       className="editable"
                     />
                   </td>
                 </tr>
-                <tr style={{ fontWeight: "bold", background: "#d9d9d9" }}>
+                <tr style={{ fontWeight: 700, background: "#e5e7eb" }}>
                   <td>TOTAL {currency}</td>
                   <td>{(subtotal + vat + shipping + other).toFixed(2)}</td>
                 </tr>
@@ -541,7 +650,14 @@ export default function Invoices() {
 
         {/* BANK DETAILS */}
         <div>
-          <div style={{ background: "#eaf2ff", color: "#1f3a8a", padding: 6 }}>
+          <div
+            style={{
+              background: "#eef2ff",
+              color: "#1e3a8a",
+              fontWeight: 600,
+              padding: 6,
+            }}
+          >
             Bank Details
           </div>
           <p>Account name: JAES SOLUTIONS LTD</p>

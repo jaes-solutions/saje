@@ -261,18 +261,6 @@ export default function Quotations() {
           Save Quote
         </button>
         <button
-          onClick={() => navigate("/invoice")}
-          style={{
-            padding: "8px 16px",
-            background: "#9333ea",
-            color: "#fff",
-            border: "none",
-            cursor: "pointer",
-          }}
-        >
-          Invoice
-        </button>
-        <button
           onClick={() => setPage(1)}
           style={{
             padding: "6px 12px",

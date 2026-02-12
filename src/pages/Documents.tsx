@@ -6,13 +6,18 @@ import {
   FileInput,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { supabase } from "../lib/supabase";
 
 function Documents() {
+  const [recentDocs, setRecentDocs] = useState<
+    { id: string; type: string; number: number; created_at: string }[]
+  >([]);
   const navigate = useNavigate();
   const items = [
     { label: "Quotation", path: "/quotes" },
     { label: "Invoice", path: "/invoice" },
-    { label: "Delivery Note", path: "/delivery-note" },
+    { label: "Delivery Note", path: "/delivery" },
     { label: "Proforma Invoice", path: "/proforma-invoice" },
     { label: "Purchase Order", path: "/purchase-order" },
   ];
@@ -24,6 +29,49 @@ function Documents() {
     <FileSpreadsheet size={64} />,
     <FileInput size={64} />,
   ];
+
+  useEffect(() => {
+    const fetchRecentDocuments = async () => {
+      const queries = await Promise.all([
+        supabase
+          .from("quotes")
+          .select("id, quote_number, created_at")
+          .order("created_at", { ascending: false })
+          .limit(5),
+        supabase
+          .from("invoices")
+          .select("id, invoice_number, created_at")
+          .order("created_at", { ascending: false })
+          .limit(5),
+      ]);
+
+      const [quotes, invoices] = queries;
+
+      const normalized = [
+        ...(quotes.data || []).map((q) => ({
+          id: q.id,
+          number: q.quote_number,
+          type: "Quotation",
+          created_at: q.created_at,
+        })),
+        ...(invoices.data || []).map((i) => ({
+          id: i.id,
+          number: i.invoice_number,
+          type: "Invoice",
+          created_at: i.created_at,
+        })),
+      ];
+
+      normalized.sort(
+        (a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+      );
+
+      setRecentDocs(normalized.slice(0, 6));
+    };
+
+    fetchRecentDocuments();
+  }, []);
 
   return (
     <div className="flex-1 p-10 overflow-auto bg-black text-white relative ml-64">
@@ -67,11 +115,28 @@ function Documents() {
           Recent Documents
         </h2>
 
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-xl shadow-2xl">
-          <p className="text-gray-400 text-sm">
-            You haven’t created any documents yet. Recent documents will appear
-            here once you start generating them.
-          </p>
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-xl shadow-2xl space-y-4">
+          {recentDocs.length === 0 ? (
+            <p className="text-gray-400 text-sm">
+              You haven’t created any documents yet.
+            </p>
+          ) : (
+            recentDocs.map((doc) => (
+              <div
+                key={doc.id}
+                className="flex items-center justify-between text-sm text-gray-200"
+              >
+                <div>
+                  <p className="font-medium">
+                    {doc.type} #{doc.number}
+                  </p>
+                  <p className="text-gray-400 text-xs">
+                    {new Date(doc.created_at).toLocaleString()}
+                  </p>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
 

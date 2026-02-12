@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 function Sidebar() {
   return (
     <aside className="fixed left-0 top-0 w-64 h-screen bg-black border-r border-white/10 text-white p-6 flex flex-col z-30">
@@ -6,37 +8,28 @@ function Sidebar() {
       </h2>
 
       <nav className="flex flex-col gap-6 text-gray-300">
-        <a
+        <Link
+          to="/dashboard"
           className="text-sm uppercase tracking-wide text-gray-400 hover:text-white transition"
-          href="#"
         >
           Dashboard
-        </a>
+        </Link>
 
-        <a
+        <Link
+          to="/documents"
           className="text-sm uppercase tracking-wide text-gray-400 hover:text-white transition"
-          href="/documents"
         >
           Documents
-        </a>
-        <a
-          className="text-sm uppercase tracking-wide text-gray-400 hover:text-white transition"
-          href="#"
-        >
+        </Link>
+        <span className="text-sm uppercase tracking-wide text-gray-400">
           Client Management
-        </a>
-        <a
-          className="text-sm uppercase tracking-wide text-gray-400 hover:text-white transition"
-          href="#"
-        >
+        </span>
+        <span className="text-sm uppercase tracking-wide text-gray-400">
           Notifications
-        </a>
-        <a
-          className="text-sm uppercase tracking-wide text-gray-400 hover:text-white transition"
-          href="#"
-        >
+        </span>
+        <span className="text-sm uppercase tracking-wide text-gray-400">
           Settings
-        </a>
+        </span>
       </nav>
       <div className="mt-auto pt-6 flex items-center gap-4 border-t border-white/10">
         <div className="w-10 h-10 rounded-full bg-white/10"></div>
