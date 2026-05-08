@@ -100,7 +100,16 @@ export default function Quotations() {
   };
   const saveQuoteToCloud = async () => {
     if (!activeQuoteNumber) return;
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
 
+    const user = session?.user;
+
+    if (!user) {
+      alert("User not logged in");
+      return;
+    }
     const payload = {
       quote_number: activeQuoteNumber,
       items: JSON.stringify(items),
@@ -112,6 +121,7 @@ export default function Quotations() {
       invoice_address: invoiceAddress || null,
       delivery_address: deliveryAddress || null,
       page2_notes: page2Notes || null,
+      user_id: user.id,
     };
 
     const { error } = await supabase
@@ -124,7 +134,6 @@ export default function Quotations() {
       alert("Failed to save quote. Check console.");
     } else {
       alert("Quote saved successfully");
-      await downloadPDF();
     }
   };
 
@@ -305,8 +314,6 @@ export default function Quotations() {
             lineHeight: 1.35,
           }}
         >
-          <div style={{ height: 6, background: "#b9e5ff", marginBottom: 16 }} />
-
           <div
             ref={page1Ref}
             style={{
@@ -402,9 +409,7 @@ export default function Quotations() {
                   Stanmore, England, HA7 1JS, UK
                 </div>
                 <div style={{ fontSize: 11, marginTop: 6 }}>
-                  VAT Reg No: 158 9915 51
-                  <br />
-                  Company Reg No: 8452633
+                  VAT No: 445 8078 69
                 </div>
               </div>
             </div>
@@ -739,116 +744,6 @@ export default function Quotations() {
               alt="Watermark"
               style={watermarkStyle}
             />
-            <h2 style={{ fontSize: 18, marginBottom: 12 }}>Item Breakdown</h2>
-
-            <table
-              style={{
-                width: "100%",
-                borderCollapse: "collapse",
-                tableLayout: "fixed",
-              }}
-            >
-              <thead>
-                <tr
-                  style={{
-                    background: "#d9f1ff",
-                    borderTop: "2px solid #000",
-                    borderBottom: "2px solid #000",
-                  }}
-                >
-                  <th style={th}>Quantity</th>
-                  <th style={th}>Description</th>
-                </tr>
-              </thead>
-              <tbody>
-                {items.map((row, i) => (
-                  <tr key={i}>
-                    <td style={td}>
-                      {isExportingPdf ? (
-                        <span>{row.qty}</span>
-                      ) : (
-                        <input
-                          type="number"
-                          value={row.qty}
-                          onChange={(e) => {
-                            const v = [...items];
-                            v[i].qty = Math.max(0, Number(e.target.value));
-                            setItems(v);
-                          }}
-                          style={{
-                            width: 80,
-                            padding: "4px",
-                            border: "1px solid #333",
-                            fontSize: 12,
-                          }}
-                        />
-                      )}
-                    </td>
-
-                    <td style={td}>
-                      {isExportingPdf ? (
-                        <span>{row.desc || "—"}</span>
-                      ) : (
-                        <div
-                          style={{
-                            display: "flex",
-                            gap: 8,
-                            alignItems: "center",
-                          }}
-                        >
-                          <input
-                            value={row.desc}
-                            onChange={(e) => {
-                              const v = [...items];
-                              v[i].desc = e.target.value;
-                              setItems(v);
-                            }}
-                            style={{
-                              width: "100%",
-                              padding: "4px",
-                              border: "1px solid #333",
-                              fontSize: 12,
-                            }}
-                          />
-
-                          {!isExportingPdf && (
-                            <button
-                              onClick={() => removeRow(i)}
-                              title="Delete row"
-                              style={{
-                                padding: "2px 6px",
-                                background: "#ffd6d6",
-                                border: "1px solid #cc0000",
-                                cursor: "pointer",
-                              }}
-                            >
-                              ✕
-                            </button>
-                          )}
-                        </div>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-
-            <div style={{ display: "flex", gap: 12, marginTop: 12 }}>
-              {!isExportingPdf && (
-                <button
-                  onClick={addRow}
-                  style={{
-                    padding: "6px 12px",
-                    background: "#d0f0ea",
-                    border: "1px solid #4bb3a7",
-                    cursor: "pointer",
-                  }}
-                >
-                  + Add Item
-                </button>
-              )}
-            </div>
-
             <hr style={{ margin: "20px 0" }} />
 
             <div>

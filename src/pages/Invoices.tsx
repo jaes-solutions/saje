@@ -150,6 +150,25 @@ export default function Invoices() {
     [items],
   );
 
+  const currencySymbol = useMemo(() => {
+    switch (currency) {
+      case "GBP":
+        return "£";
+      case "INR":
+        return "₹";
+      default:
+        return "$";
+    }
+  }, [currency]);
+
+  const vatAmount = useMemo(() => {
+    return subtotal * (Number(vat) / 100);
+  }, [subtotal, vat]);
+
+  const grandTotal = useMemo(() => {
+    return subtotal + vatAmount + Number(shipping) + Number(other);
+  }, [subtotal, vatAmount, shipping, other]);
+
   // =========================
   //   DISPLAY INVOICE NUMBER
   // =========================
@@ -219,12 +238,23 @@ export default function Invoices() {
   /* =========================
      RENDER
   ========================= */
+  const addRow = () => {
+    setItems([...items, { item: "", description: "", qty: 1, price: 0 }]);
+  };
+
+  const removeRow = (index: number) => {
+    if (items.length === 1) return;
+    setItems(items.filter((_, i) => i !== index));
+  };
+
   return (
-    <div style={{ background: "#000", padding: 32 }}>
+    <div style={{ background: "#000", padding: 10 }}>
       <style>{`
   .invoice-page {
     font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
     position: relative;
+    font-size: 12px;
+    line-height: 1.35;
   }
 
   .lb {
@@ -262,21 +292,54 @@ export default function Invoices() {
     border: none !important;
   }
 
+  body.pdf-mode .hide-pdf {
+    display: none !important;
+  }
+
+  body.pdf-mode button {
+    display: none !important;
+  }
+
+  table th,
+  table td {
+    vertical-align: middle;
+  }
+
   .invoice-page > * {
     position: relative;
     z-index: 1;
   }
 `}</style>
       <div
+        className="hide-pdf"
         style={{
           display: "flex",
           justifyContent: "flex-end",
           gap: 12,
-          maxWidth: 794,
+          width: "210mm",
           margin: "0 auto",
         }}
       >
-        <button className="btn-lb">Download PDF</button>
+        <button
+          className="btn-lb"
+          onClick={async () => {
+            document.body.classList.add("pdf-mode");
+            const canvas = await html2canvas(pageRef.current!, {
+              scale: 2,
+            });
+            document.body.classList.remove("pdf-mode");
+
+            const img = canvas.toDataURL("image/png");
+            const pdf = new jsPDF("p", "px", "a4");
+            const w = pdf.internal.pageSize.getWidth();
+            const h = (canvas.height * w) / canvas.width;
+
+            pdf.addImage(img, "PNG", 0, 0, w, h);
+            pdf.save(`Invoice-${invoiceNumber}.pdf`);
+          }}
+        >
+          Download PDF
+        </button>
         <button className="btn-lb" onClick={saveInvoice}>
           Save Invoice
         </button>
@@ -286,10 +349,11 @@ export default function Invoices() {
         ref={pageRef}
         className="invoice-page"
         style={{
-          width: 794,
-          margin: "24px auto",
+          width: "210mm",
+          minHeight: "297mm",
+          margin: "6px auto",
           background: "#fff",
-          padding: 32,
+          padding: "10mm",
           overflow: "hidden",
           boxShadow: "0 10px 25px rgba(0,0,0,0.08)",
           borderRadius: 8,
@@ -309,92 +373,87 @@ export default function Invoices() {
           }}
         />
         {/* HEADER */}
-        <div
-          style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}
-        >
+        <div style={{ display: "flex", justifyContent: "space-between" }}>
           <div>
             <img
               src="/assets/jaes-logo.png"
               alt="JAES"
-              style={{ height: 64 }}
+              style={{ width: 120, marginBottom: 4 }}
             />
+            <div style={{ textAlign: "left" }}>
+              <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>
+                INVOICE
+              </h2>
+              <p
+                style={{
+                  display: "inline-block",
+                  borderRadius: 6,
+                  margin: "4px 0",
+                }}
+              >
+                <strong>Invoice Number: </strong>
+                {displayInvoiceNumber}
+              </p>
+
+              <p>
+                <strong>PO#:</strong>{" "}
+                <input
+                  value={poNumber}
+                  onChange={(e) => setPoNumber(e.target.value)}
+                  className="editable"
+                />
+              </p>
+              <p>
+                <strong>Date:</strong> {new Date().toLocaleDateString()}
+              </p>
+              <p>
+                <strong>Payment:</strong>{" "}
+                <select
+                  value={paymentTerms}
+                  onChange={(e) => setPaymentTerms(e.target.value)}
+                  className="editable"
+                >
+                  <option>30 days</option>
+                  <option>60 days</option>
+                  <option>90 days</option>
+                </select>
+              </p>
+              <p>
+                <strong>Currency:</strong>{" "}
+                <select
+                  value={currency}
+                  onChange={(e) => setCurrency(e.target.value as any)}
+                  className="editable"
+                >
+                  <option value="USD">USD</option>
+                  <option value="GBP">GBP</option>
+                  <option value="INR">INR</option>
+                </select>
+              </p>
+            </div>
+          </div>
+          <div style={{ textAlign: "right", minWidth: 220 }}>
             <p>
               <strong>JAES Solutions LTD</strong>
             </p>
-            <p>Devonshire House,</p>
-            <p>582 Honeypot Lane HA7 1JS Stanmore UK</p>
-            <p>Phone: 01279 213707</p>
-            <p>Email: info@jaessolutions.com</p>
-          </div>
-
-          <div style={{ textAlign: "right" }}>
-            <h2 style={{ color: "#4c5d8a" }}>INVOICE</h2>
-            <p>
-              <strong>Date:</strong> {new Date().toLocaleDateString()}
-            </p>
-            <p>
-              <strong>PO#:</strong>{" "}
-              <input
-                value={poNumber}
-                onChange={(e) => setPoNumber(e.target.value)}
-                className="editable"
-              />
-            </p>
-            <p>
-              <strong>Payment:</strong>{" "}
-              <select
-                value={paymentTerms}
-                onChange={(e) => setPaymentTerms(e.target.value)}
-                className="editable"
-              >
-                <option>30 days</option>
-                <option>60 days</option>
-                <option>90 days</option>
-              </select>
-            </p>
-            <p>
-              <strong>Currency:</strong>{" "}
-              <select
-                value={currency}
-                onChange={(e) => setCurrency(e.target.value as any)}
-                className="editable"
-              >
-                <option value="USD">USD</option>
-                <option value="GBP">GBP</option>
-                <option value="INR">INR</option>
-              </select>
-            </p>
-            <p
-              style={{
-                background: "#eef2ff",
-                color: "#1e3a8a",
-                padding: 6,
-                display: "inline-block",
-                borderRadius: 6,
-                fontWeight: 600,
-              }}
-            >
-              {displayInvoiceNumber}
-            </p>
+            <div style={{ fontSize: 11, marginTop: 2, lineHeight: 1.2 }}>
+              <p>Devonshire House, 582 Honeypot Lane,</p>
+              <p>Stanmore, England, HA7 1JS, UK</p>
+              <p>Email: info@jaessolutions.com</p>
+              <p>Phone: 01279 213707</p>
+            </div>
           </div>
         </div>
 
-        <hr />
+        <div style={{ marginTop: 4 }} />
 
+        <hr />
+        <div style={{ marginTop: 4 }} />
         {/* VENDOR / SHIP TO */}
-        <div
-          style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}
-        >
+        <div style={{ display: "flex", justifyContent: "space-between" }}>
           <div>
-            <div
-              style={{
-                background: "#eef2ff",
-                color: "#1e3a8a",
-                fontWeight: 600,
-                padding: 6,
-              }}
-            >
-              VENDOR
+            <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>
+              Vendor
             </div>
             <textarea
               value={[vendor.name, vendor.address, vendor.phone]
@@ -408,24 +467,21 @@ export default function Invoices() {
                 })
               }
               style={{
-                width: "100%",
-                minHeight: 120,
-                background: "rgba(255,255,255,0.4)",
+                width: 260,
+                height: 80,
+                padding: 4,
+                border: "1px solid #333",
+                fontSize: 12,
+                lineHeight: 1.35,
+                resize: "none",
               }}
               className="editable"
             />
           </div>
 
           <div>
-            <div
-              style={{
-                background: "#eef2ff",
-                color: "#1e3a8a",
-                fontWeight: 600,
-                padding: 6,
-              }}
-            >
-              SHIP TO
+            <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>
+              Ship To
             </div>
             <textarea
               value={[shipTo.name, shipTo.address, shipTo.phone]
@@ -439,16 +495,20 @@ export default function Invoices() {
                 })
               }
               style={{
-                width: "100%",
-                minHeight: 120,
-                background: "rgba(255,255,255,0.4)",
+                width: 260,
+                height: 80,
+                padding: 4,
+                border: "1px solid #333",
+                fontSize: 12,
+                lineHeight: 1.35,
+                resize: "none",
               }}
               className="editable"
             />
           </div>
         </div>
 
-        <br />
+        <div style={{ height: 4 }} />
 
         {/* ITEMS TABLE */}
         <table
@@ -458,23 +518,35 @@ export default function Invoices() {
             borderCollapse: "collapse",
             tableLayout: "fixed",
             width: "100%",
+            border: "1px solid #000",
+            fontSize: 11,
+            lineHeight: 1.35,
           }}
         >
           <thead
-            style={{ background: "#eef2ff", color: "#1e3a8a", fontWeight: 600 }}
+            style={{
+              background: "#d9f1ff",
+              borderTop: "2px solid #000",
+              borderBottom: "2px solid #000",
+            }}
           >
             <tr>
-              <th style={{ width: "15%" }}>ITEM</th>
-              <th style={{ width: "35%" }}>DESCRIPTION</th>
-              <th style={{ width: "10%" }}>QTY</th>
-              <th style={{ width: "20%" }}>UNIT PRICE</th>
-              <th style={{ width: "20%" }}>TOTAL</th>
+              <th style={{ width: "12%", border: "1px solid #000" }}>ITEM</th>
+              <th style={{ width: "33%", border: "1px solid #000" }}>
+                DESCRIPTION
+              </th>
+              <th style={{ width: "10%", border: "1px solid #000" }}>QTY</th>
+              <th style={{ width: "18%", border: "1px solid #000" }}>
+                UNIT PRICE
+              </th>
+              <th style={{ width: "17%", border: "1px solid #000" }}>TOTAL</th>
+              <th style={{ width: "10%", border: "1px solid #000" }}>ACTION</th>
             </tr>
           </thead>
           <tbody>
             {items.map((it, idx) => (
               <tr key={idx} style={{ background: "transparent" }}>
-                <td>
+                <td style={{ border: "1px solid #000" }}>
                   <input
                     value={it.item}
                     onChange={(e) => {
@@ -486,7 +558,7 @@ export default function Invoices() {
                     style={{ width: "100%" }}
                   />
                 </td>
-                <td>
+                <td style={{ border: "1px solid #000" }}>
                   <input
                     value={it.description}
                     onChange={(e) => {
@@ -498,7 +570,7 @@ export default function Invoices() {
                     style={{ width: "100%" }}
                   />
                 </td>
-                <td>
+                <td style={{ border: "1px solid #000" }}>
                   <input
                     type="number"
                     value={it.qty}
@@ -512,7 +584,7 @@ export default function Invoices() {
                     style={{ width: "100%" }}
                   />
                 </td>
-                <td>
+                <td style={{ border: "1px solid #000" }}>
                   <input
                     type="number"
                     value={it.price}
@@ -526,35 +598,75 @@ export default function Invoices() {
                     style={{ width: "100%" }}
                   />
                 </td>
-                <td style={{ textAlign: "right", fontWeight: 500 }}>
+                <td
+                  style={{
+                    textAlign: "right",
+                    fontWeight: 500,
+                    border: "1px solid #000",
+                  }}
+                >
+                  {currencySymbol}
                   {(it.qty * it.price).toFixed(2)}
+                </td>
+                <td
+                  style={{
+                    border: "1px solid #000",
+                    textAlign: "center",
+                  }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => removeRow(idx)}
+                    className="btn-lb"
+                    style={{
+                      padding: "4px 10px",
+                      background: "#d0f0ea",
+                      color: "#166534",
+                      border: "1px solid #4bb3a7",
+                      borderRadius: 6,
+                      fontWeight: 600,
+                    }}
+                  >
+                    ✕
+                  </button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
 
-        <button
-          onClick={() =>
-            setItems([
-              ...items,
-              { item: "", description: "", qty: 1, price: 0 },
-            ])
-          }
+        <div
+          style={{
+            marginTop: 6,
+            display: "flex",
+            justifyContent: "flex-start",
+          }}
         >
-          + Add Item
-        </button>
+          <button
+            type="button"
+            onClick={addRow}
+            className="btn-lb"
+            style={{
+              background: "#d0f0ea",
+              color: "#166534",
+              border: "1px solid #4bb3a7",
+              fontWeight: 600,
+            }}
+          >
+            + Add Item
+          </button>
+        </div>
 
-        <br />
-        <br />
+        <div style={{ height: 6 }} />
 
         {/* TOTALS */}
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            columnGap: 16,
-            rowGap: 16,
+            gridTemplateColumns: "1fr 420px",
+            columnGap: 10,
+            rowGap: 6,
+            alignItems: "start",
           }}
         >
           <div>
@@ -563,6 +675,7 @@ export default function Invoices() {
                 background: "#eef2ff",
                 color: "#1e3a8a",
                 fontWeight: 600,
+                fontSize: 18,
                 padding: 6,
               }}
             >
@@ -571,21 +684,68 @@ export default function Invoices() {
             <textarea
               value={comments}
               onChange={(e) => setComments(e.target.value)}
-              style={{ width: "100%", minHeight: 100 }}
+              style={{ width: "100%", minHeight: 60 }}
               className="editable"
             />
           </div>
 
           <div>
-            <table width="100%" border={1} cellPadding={6}>
+            <table
+              width="100%"
+              cellPadding={8}
+              style={{
+                borderCollapse: "separate",
+                borderSpacing: 0,
+                border: "1px solid #cde7dc",
+                background: "#f7fbf9",
+                borderRadius: 10,
+                overflow: "hidden",
+                padding: 4,
+                fontSize: 11,
+                lineHeight: 1.35,
+              }}
+            >
               <tbody>
                 <tr>
-                  <td>Subtotal</td>
-                  <td>{subtotal.toFixed(2)}</td>
+                  <td
+                    style={{
+                      padding: "4px 8px",
+                      fontSize: 12,
+                      fontWeight: 500,
+                    }}
+                  >
+                    Subtotal ({currency})
+                  </td>
+                  <td
+                    style={{
+                      padding: "4px 8px",
+                      textAlign: "right",
+                      fontSize: 12,
+                      fontWeight: 600,
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {currencySymbol}
+                    {subtotal.toFixed(2)}
+                  </td>
                 </tr>
+
                 <tr>
-                  <td>VAT</td>
-                  <td>
+                  <td
+                    style={{
+                      padding: "4px 8px",
+                      fontSize: 12,
+                      fontWeight: 500,
+                    }}
+                  >
+                    VAT (%)
+                  </td>
+                  <td
+                    style={{
+                      padding: "4px 8px",
+                      textAlign: "right",
+                    }}
+                  >
                     <input
                       type="number"
                       value={vat}
@@ -594,16 +754,59 @@ export default function Invoices() {
                       }
                       min={0}
                       style={{
-                        background: "rgba(255,255,255,0.4)",
-                        width: "100%",
+                        background: "#fff",
+                        width: 110,
+                        textAlign: "right",
+                        height: 32,
+                        border: "1px solid #888",
+                        borderRadius: 0,
+                        fontSize: 12,
+                        paddingRight: 8,
                       }}
                       className="editable"
                     />
                   </td>
                 </tr>
+
                 <tr>
-                  <td>Shipping</td>
-                  <td>
+                  <td
+                    style={{
+                      padding: "4px 8px",
+                      fontSize: 12,
+                      fontWeight: 500,
+                    }}
+                  >
+                    VAT Amount
+                  </td>
+                  <td
+                    style={{
+                      padding: "4px 8px",
+                      textAlign: "right",
+                      fontSize: 12,
+                      fontWeight: 600,
+                    }}
+                  >
+                    {currencySymbol}
+                    {vatAmount.toFixed(2)}
+                  </td>
+                </tr>
+
+                <tr>
+                  <td
+                    style={{
+                      padding: "4px 8px",
+                      fontSize: 12,
+                      fontWeight: 500,
+                    }}
+                  >
+                    Shipping
+                  </td>
+                  <td
+                    style={{
+                      padding: "4px 8px",
+                      textAlign: "right",
+                    }}
+                  >
                     <input
                       type="number"
                       value={shipping}
@@ -612,49 +815,64 @@ export default function Invoices() {
                       }
                       min={0}
                       style={{
-                        background: "rgba(255,255,255,0.4)",
-                        width: "100%",
+                        background: "#fff",
+                        width: 110,
+                        textAlign: "right",
+                        height: 32,
+                        border: "1px solid #888",
+                        borderRadius: 0,
+                        fontSize: 12,
+                        paddingRight: 8,
                       }}
                       className="editable"
                     />
                   </td>
                 </tr>
+
                 <tr>
-                  <td>Other</td>
-                  <td>
-                    <input
-                      type="number"
-                      value={other}
-                      onChange={(e) =>
-                        setOther(Math.max(0, Number(e.target.value)))
-                      }
-                      min={0}
+                  <td
+                    colSpan={2}
+                    style={{
+                      paddingTop: 6,
+                      paddingLeft: 12,
+                      paddingRight: 12,
+                      paddingBottom: 12,
+                    }}
+                  >
+                    <div
                       style={{
-                        background: "rgba(255,255,255,0.4)",
-                        width: "100%",
+                        borderTop: "1px solid #cde7dc",
+                        paddingTop: 6,
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        fontSize: 16,
+                        fontWeight: 700,
                       }}
-                      className="editable"
-                    />
+                    >
+                      <span>Total Inc-VAT</span>
+                      <span>
+                        {currencySymbol}
+                        {grandTotal.toFixed(2)}
+                      </span>
+                    </div>
                   </td>
-                </tr>
-                <tr style={{ fontWeight: 700, background: "#e5e7eb" }}>
-                  <td>TOTAL {currency}</td>
-                  <td>{(subtotal + vat + shipping + other).toFixed(2)}</td>
                 </tr>
               </tbody>
             </table>
           </div>
         </div>
 
-        <br />
+        <div style={{ height: 4 }} />
 
         {/* BANK DETAILS */}
         <div>
           <div
             style={{
-              background: "#eef2ff",
+              background: "#d9f1ff",
               color: "#1e3a8a",
               fontWeight: 600,
+              fontSize: 18,
               padding: 6,
             }}
           >

@@ -19,13 +19,30 @@ export default function InvoiceHome() {
   // Load recent invoices
   useEffect(() => {
     const loadInvoices = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      const user = session?.user;
+
+      if (!user) {
+        console.warn("No authenticated user found");
+        return;
+      }
+
       const { data, error } = await supabase
         .from("invoices")
-        .select("invoice_number, created_at")
+        .select("invoice_number, created_at, user_id")
+        .eq("user_id", user.id)
         .order("invoice_number", { ascending: false })
         .limit(10);
 
-      if (!error && data) {
+      if (error) {
+        console.error("Error loading invoices:", error);
+        return;
+      }
+
+      if (data) {
         setRecentInvoices(
           data.map((i: any) => ({
             invoiceNumber: i.invoice_number,
@@ -44,6 +61,15 @@ export default function InvoiceHome() {
     const newNo = base + 1;
     localStorage.setItem("invoiceCounter", String(newNo));
 
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      alert("User not logged in");
+      return;
+    }
+
     const { error } = await supabase.from("invoices").insert({
       invoice_number: newNo,
       items: [],
@@ -54,9 +80,11 @@ export default function InvoiceHome() {
       vendor: {},
       ship_to: {},
       comments: "",
+      user_id: user.id,
     });
 
     if (error) {
+      console.error("Insert error:", error);
       alert("Failed to create invoice");
       return;
     }

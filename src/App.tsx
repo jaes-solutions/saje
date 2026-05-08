@@ -3,6 +3,7 @@ import Navbar from "./components/Navbar";
 import Sidebar from "./components/Sidebar";
 import Dashboard from "./pages/Dashboard";
 import Home from "./pages/Home";
+import Login from "./pages/Login";
 import Documents from "./pages/Documents";
 import Quotations from "./pages/Quotations";
 import QuoteHome from "./pages/QuoteHome";
@@ -13,6 +14,7 @@ import DeliveryHome from "./pages/DeliveryHome";
 import DeliveryNotes from "./pages/DeliveryNotes";
 import ProformaInvoice from "./pages/ProformaInvoice";
 import PurchaseOrder from "./pages/PurchaseOrder";
+import ProtectedRoute from "./pages/ProtectedRoute";
 import "./App.css";
 
 function App() {
@@ -21,221 +23,257 @@ function App() {
       <Routes>
         {/* Public Home Page */}
         <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
 
         {/* Dashboard Layout (Protected after login later) */}
         <Route
           path="/dashboard"
           element={
-            <div
-              className="app-layout"
-              style={{ display: "flex", height: "100vh" }}
-            >
-              <Sidebar />
-              <div style={{ flex: 1 }}>
-                <Navbar />
-                <Dashboard />
+            <ProtectedRoute>
+              <div
+                className="app-layout"
+                style={{ display: "flex", height: "100vh" }}
+              >
+                <Sidebar />
+                <div style={{ flex: 1 }}>
+                  <Navbar />
+                  <Dashboard />
+                </div>
               </div>
-            </div>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/documents"
           element={
-            <div
-              className="app-layout"
-              style={{ display: "flex", height: "100vh" }}
-            >
-              <Sidebar />
-              <div style={{ flex: 1 }}>
-                <Navbar />
-                <Documents />
+            <ProtectedRoute>
+              <div
+                className="app-layout"
+                style={{ display: "flex", height: "100vh" }}
+              >
+                <Sidebar />
+                <div style={{ flex: 1 }}>
+                  <Navbar />
+                  <Documents />
+                </div>
               </div>
-            </div>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/quotes"
           element={
-            <div
-              className="app-layout"
-              style={{ display: "flex", height: "100vh" }}
-            >
-              <Sidebar />
-              <div style={{ flex: 1 }}>
-                <Navbar />
-                <QuoteHome />
+            <ProtectedRoute>
+              <div
+                className="app-layout"
+                style={{ display: "flex", height: "100vh" }}
+              >
+                <Sidebar />
+                <div style={{ flex: 1 }}>
+                  <Navbar />
+                  <QuoteHome />
+                </div>
               </div>
-            </div>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/delivery"
           element={
-            <div
-              className="app-layout"
-              style={{ display: "flex", height: "100vh" }}
-            >
-              <Sidebar />
-              <div style={{ flex: 1 }}>
-                <Navbar />
-                <DeliveryHome />
+            <ProtectedRoute>
+              <div
+                className="app-layout"
+                style={{ display: "flex", height: "100vh" }}
+              >
+                <Sidebar />
+                <div style={{ flex: 1 }}>
+                  <Navbar />
+                  <DeliveryHome />
+                </div>
               </div>
-            </div>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/delivery/new"
           element={
-            <div
-              className="app-layout"
-              style={{ display: "flex", height: "100vh" }}
-            >
-              <Sidebar />
-              <div style={{ flex: 1 }}>
-                <Navbar />
-                <DeliveryNotes />
+            <ProtectedRoute>
+              <div
+                className="app-layout"
+                style={{ display: "flex", height: "100vh" }}
+              >
+                <Sidebar />
+                <div style={{ flex: 1 }}>
+                  <Navbar />
+                  <DeliveryNotes />
+                </div>
               </div>
-            </div>
+            </ProtectedRoute>
           }
         />
 
         <Route
           path="/delivery/:deliveryNoteNumber"
           element={
-            <div
-              className="app-layout"
-              style={{ display: "flex", height: "100vh" }}
-            >
-              <Sidebar />
-              <div style={{ flex: 1 }}>
-                <Navbar />
-                <DeliveryNotes />
+            <ProtectedRoute>
+              <div
+                className="app-layout"
+                style={{ display: "flex", height: "100vh" }}
+              >
+                <Sidebar />
+                <div style={{ flex: 1 }}>
+                  <Navbar />
+                  <DeliveryNotes />
+                </div>
               </div>
-            </div>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/invoice"
           element={
-            <div
-              className="app-layout"
-              style={{ display: "flex", height: "100vh" }}
-            >
-              <Sidebar />
-              <div style={{ flex: 1 }}>
-                <Navbar />
-                <InvoiceHome />
+            <ProtectedRoute>
+              <div
+                className="app-layout"
+                style={{ display: "flex", height: "100vh" }}
+              >
+                <Sidebar />
+                <div style={{ flex: 1 }}>
+                  <Navbar />
+                  <InvoiceHome />
+                </div>
               </div>
-            </div>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/quotation"
           element={
-            <div
-              className="app-layout"
-              style={{ display: "flex", height: "100vh" }}
-            >
-              <Sidebar />
-              <div style={{ flex: 1 }}>
-                <Navbar />
-                <Quotations />
+            <ProtectedRoute>
+              <div
+                className="app-layout"
+                style={{ display: "flex", height: "100vh" }}
+              >
+                <Sidebar />
+                <div style={{ flex: 1 }}>
+                  <Navbar />
+                  <Quotations />
+                </div>
               </div>
-            </div>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/quotations/:quoteNumber"
           element={
-            <div
-              className="app-layout"
-              style={{ display: "flex", height: "100vh" }}
-            >
-              <Sidebar />
-              <div style={{ flex: 1 }}>
-                <Navbar />
-                <Quotations />
+            <ProtectedRoute>
+              <div
+                className="app-layout"
+                style={{ display: "flex", height: "100vh" }}
+              >
+                <Sidebar />
+                <div style={{ flex: 1 }}>
+                  <Navbar />
+                  <Quotations />
+                </div>
               </div>
-            </div>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/invoices/:invoiceNumber"
           element={
-            <div
-              className="app-layout"
-              style={{ display: "flex", height: "100vh" }}
-            >
-              <Sidebar />
-              <div style={{ flex: 1 }}>
-                <Navbar />
-                <Invoices />
+            <ProtectedRoute>
+              <div
+                className="app-layout"
+                style={{ display: "flex", height: "100vh" }}
+              >
+                <Sidebar />
+                <div style={{ flex: 1 }}>
+                  <Navbar />
+                  <Invoices />
+                </div>
               </div>
-            </div>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/proforma"
           element={
-            <div
-              className="app-layout"
-              style={{ display: "flex", height: "100vh" }}
-            >
-              <Sidebar />
-              <div style={{ flex: 1 }}>
-                <Navbar />
-                <ProformaInvoice />
+            <ProtectedRoute>
+              <div
+                className="app-layout"
+                style={{ display: "flex", height: "100vh" }}
+              >
+                <Sidebar />
+                <div style={{ flex: 1 }}>
+                  <Navbar />
+                  <ProformaInvoice />
+                </div>
               </div>
-            </div>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/proforma/:proformaNumber"
           element={
-            <div
-              className="app-layout"
-              style={{ display: "flex", height: "100vh" }}
-            >
-              <Sidebar />
-              <div style={{ flex: 1 }}>
-                <Navbar />
-                <ProformaInvoice />
+            <ProtectedRoute>
+              <div
+                className="app-layout"
+                style={{ display: "flex", height: "100vh" }}
+              >
+                <Sidebar />
+                <div style={{ flex: 1 }}>
+                  <Navbar />
+                  <ProformaInvoice />
+                </div>
               </div>
-            </div>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/purchase-order"
           element={
-            <div
-              className="app-layout"
-              style={{ display: "flex", height: "100vh" }}
-            >
-              <Sidebar />
-              <div style={{ flex: 1 }}>
-                <Navbar />
-                <PurchaseOrder />
+            <ProtectedRoute>
+              <div
+                className="app-layout"
+                style={{ display: "flex", height: "100vh" }}
+              >
+                <Sidebar />
+                <div style={{ flex: 1 }}>
+                  <Navbar />
+                  <PurchaseOrder />
+                </div>
               </div>
-            </div>
+            </ProtectedRoute>
           }
         />
 
         <Route
           path="/purchase-order/:poNumber"
           element={
-            <div
-              className="app-layout"
-              style={{ display: "flex", height: "100vh" }}
-            >
-              <Sidebar />
-              <div style={{ flex: 1 }}>
-                <Navbar />
-                <PurchaseOrder />
+            <ProtectedRoute>
+              <div
+                className="app-layout"
+                style={{ display: "flex", height: "100vh" }}
+              >
+                <Sidebar />
+                <div style={{ flex: 1 }}>
+                  <Navbar />
+                  <PurchaseOrder />
+                </div>
               </div>
-            </div>
+            </ProtectedRoute>
           }
         />
-        <Route path="/quotes/view/:quoteNumber" element={<QuoteView />} />
+        <Route
+          path="/quotes/view/:quoteNumber"
+          element={
+            <ProtectedRoute>
+              <QuoteView />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </Router>
   );

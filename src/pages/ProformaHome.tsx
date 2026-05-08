@@ -2,87 +2,67 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 
-type Quote = {
-  quoteNumber: number;
+type ProFormaInvoice = {
+  proFormaInvoiceNumber: number;
   createdAt: string;
 };
 
-export default function QuoteHome() {
+export default function ProFormaHome() {
   const navigate = useNavigate();
-  const [recentQuotes, setRecentQuotes] = useState<Quote[]>([]);
+  const [recentInvoices, setRecentInvoices] = useState<ProFormaInvoice[]>([]);
 
-  const formatQuoteNumber = (num: number) => {
+  const formatProFormaNumber = (num: number) => {
     const year = new Date().getFullYear().toString().slice(-2);
-    return `${year}-QT-${String(num).padStart(6, "0")}`;
+    return `${year}-PF-${String(num).padStart(6, "0")}`;
   };
 
-  // Load recent quotes
+  // Load recent pro forma invoices
   useEffect(() => {
-    const loadQuotes = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+    const loadInvoices = async () => {
+      const { data, error } = await supabase
+        .from("proforma_invoices")
+        .select("proforma_invoice_number, created_at")
+        .order("proforma_invoice_number", { ascending: false })
+        .limit(10);
 
-      const user = session?.user;
-
-      if (!user) {
-        console.warn("No authenticated user");
+      if (error) {
+        console.error("ProFormaHome Supabase error:", error);
+        setRecentInvoices([]);
         return;
       }
 
-      const { data, error } = await supabase
-        .from("quotes")
-        .select("quote_number, created_at")
-        .eq("user_id", user.id)
-        .order("quote_number", { ascending: false })
-        .limit(10);
-
-      if (!error && data) {
-        setRecentQuotes(
-          data.map((q: any) => ({
-            quoteNumber: q.quote_number,
-            createdAt: new Date(q.created_at).toLocaleString("en-GB"),
+      if (data) {
+        setRecentInvoices(
+          data.map((n: any) => ({
+            proFormaInvoiceNumber: n.proforma_invoice_number,
+            createdAt: n.created_at
+              ? new Date(n.created_at).toLocaleString("en-GB")
+              : "—",
           })),
         );
       }
     };
 
-    loadQuotes();
+    loadInvoices();
   }, []);
 
-  const createNewQuote = async () => {
-    const stored = Number(localStorage.getItem("quoteCounter"));
-    const base = Number.isFinite(stored) && stored >= 7000 ? stored : 7000;
+  const createNewProForma = async () => {
+    const stored = Number(localStorage.getItem("proFormaCounter"));
+    const base = Number.isFinite(stored) && stored >= 4000 ? stored : 4000;
     const newNo = base + 1;
-    localStorage.setItem("quoteCounter", String(newNo));
+    localStorage.setItem("proFormaCounter", String(newNo));
 
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    const user = session?.user;
-
-    if (!user) {
-      alert("User not logged in");
-      return;
-    }
-
-    const { error } = await supabase.from("quotes").insert({
-      quote_number: newNo,
+    const { error } = await supabase.from("proforma_invoices").insert({
+      proforma_invoice_number: newNo,
       items: [],
-      vat_percent: 0,
-      sales_consultant: "",
-      valid_until: null,
-      user_id: user.id,
     });
 
     if (error) {
-      console.error("Quote insert error:", error);
-      alert("Failed to create quote");
+      alert("Failed to create pro forma invoice");
       return;
     }
 
-    navigate(`/quotations/${newNo}`);
+    navigate("/proforma/new");
   };
 
   return (
@@ -96,12 +76,12 @@ export default function QuoteHome() {
       }}
     >
       <h1 style={{ fontSize: 32, fontWeight: 800, marginBottom: 32 }}>
-        Quotations
+        Pro Forma Invoices
       </h1>
 
-      {/* Create Quote Tile */}
+      {/* Create Pro Forma Tile */}
       <div
-        onClick={createNewQuote}
+        onClick={createNewProForma}
         style={{
           width: 260,
           height: 150,
@@ -117,16 +97,18 @@ export default function QuoteHome() {
         }}
       >
         <div style={{ fontSize: 42, lineHeight: 1, color: "#fff" }}>＋</div>
-        <div style={{ marginTop: 8, fontWeight: 600 }}>Create New Quote</div>
+        <div style={{ marginTop: 8, fontWeight: 600 }}>
+          Create New Pro Forma Invoice
+        </div>
       </div>
 
-      {/* Recent Quotes */}
+      {/* Recent Pro Forma Invoices */}
       <h2 style={{ fontSize: 22, fontWeight: 600, marginBottom: 16 }}>
-        Recent Quotes
+        Recent Pro Forma Invoices
       </h2>
 
-      {recentQuotes.length === 0 ? (
-        <p>No quotes created yet.</p>
+      {recentInvoices.length === 0 ? (
+        <p>No pro forma invoices created yet.</p>
       ) : (
         <table
           style={{
@@ -137,25 +119,27 @@ export default function QuoteHome() {
         >
           <thead>
             <tr style={{ background: "rgba(255,255,255,0.08)" }}>
-              <th style={th}>Quote Number</th>
+              <th style={th}>Pro Forma Number</th>
               <th style={th}>Created At</th>
               <th style={th}>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {recentQuotes.map((q) => (
-              <tr key={q.quoteNumber}>
-                <td style={td}>{formatQuoteNumber(q.quoteNumber)}</td>
-                <td style={td}>{q.createdAt}</td>
+            {recentInvoices.map((n) => (
+              <tr key={n.proFormaInvoiceNumber}>
+                <td style={td}>
+                  {formatProFormaNumber(n.proFormaInvoiceNumber)}
+                </td>
+                <td style={td}>{n.createdAt}</td>
                 <td style={td}>
                   <button
                     onClick={async (e) => {
                       e.stopPropagation();
 
-                      const fileName = `Quotation-${q.quoteNumber}.pdf`;
+                      const fileName = `ProForma-${n.proFormaInvoiceNumber}.pdf`;
 
                       const { data, error } = await supabase.storage
-                        .from("quotes-pdf")
+                        .from("proforma-invoices-pdf")
                         .createSignedUrl(fileName, 60 * 5);
 
                       if (error || !data?.signedUrl) {
@@ -175,10 +159,11 @@ export default function QuoteHome() {
                   >
                     Open
                   </button>
+
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      navigate(`/quotations/${q.quoteNumber}`);
+                      navigate(`/proforma/${n.proFormaInvoiceNumber}`);
                     }}
                     style={{
                       padding: "6px 12px",
