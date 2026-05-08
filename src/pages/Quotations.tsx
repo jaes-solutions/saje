@@ -2,14 +2,13 @@ import React, { useRef } from "react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 
 export default function Quotations() {
   const { quoteNumber: routeQuoteNumber } = useParams<{
     quoteNumber: string;
   }>();
-  const navigate = useNavigate();
   const pdfRef = useRef<HTMLDivElement | null>(null);
   const page1Ref = useRef<HTMLDivElement | null>(null);
   const page2Ref = useRef<HTMLDivElement | null>(null);

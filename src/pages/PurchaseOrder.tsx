@@ -1,8 +1,7 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { useNavigate, useParams } from "react-router-dom";
-import { supabase } from "../lib/supabase";
 
 type Item = {
   item: string;
